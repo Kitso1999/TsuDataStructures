@@ -1,0 +1,2 @@
+add_library(DataStructures)
+target_include_directories(DataStructures BinarySearchTree)
