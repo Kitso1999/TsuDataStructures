@@ -1,2 +1,2 @@
-add_library(DataStructures)
-target_include_directories(DataStructures BinarySearchTree)
+add_library(DataStructures INTERFACE)
+target_include_directories(DataStructures INTERFACE BinarySearchTree)
