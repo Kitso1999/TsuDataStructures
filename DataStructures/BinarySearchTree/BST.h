@@ -32,9 +32,9 @@ public:
     void postorder( std::ostream &out = std::cout ) const;
 
 private:
-    void inorder( Node *root, std::ostream &out) const;
-    void preorder( Node *root, std::ostream &out) const;
-    void postorder( Node *root, std::ostream &out) const;
+    void inorder( Node *root, std::ostream &out ) const;
+    void preorder( Node *root, std::ostream &out ) const;
+    void postorder( Node *root, std::ostream &out ) const;
 
 private:
     Node *root_{};
@@ -43,7 +43,7 @@ private:
 template<typename T>
 BST<T>::BST( const BST &other )
 {
-    if ( !other.empty() )
+    if ( other.empty() )
         return;
 
     root_ = new Node{ other.root_->value };
@@ -65,14 +65,14 @@ BST<T>::BST( const BST &other )
             auto *new_node = new Node{ other_node->left->value };
             node->left = new_node;
             q.push( new_node );
-            other_q.push( other_node.left );
+            other_q.push( other_node->left );
         }
 
         if ( other_node->right ) {
             auto *new_node = new Node{ other_node->right->value };
             node->right = new_node;
             q.push( new_node );
-            other_q.push( other_node.right );
+            other_q.push( other_node->right );
         }
     }
 }
@@ -81,8 +81,8 @@ template<typename T>
 BST<T> &BST<T>::operator=( const BST &other )
 {
     if ( this != &other ) {
-        std::destroy_at( this );
-        std::construct_at( this, other );
+        std::destroy_at( this ); // this->~BST();
+        std::construct_at( this, other ); // ::new (this) BST(other);
     }
     return *this;
 }
@@ -94,6 +94,8 @@ BST<T>::~BST()
         return;
 
     std::queue<Node *> q;
+    q.push( root_ );
+
     while ( !q.empty() ) {
         auto *node = q.front();
         q.pop();
@@ -110,8 +112,8 @@ BST<T>::~BST()
 template<typename T>
 void BST<T>::insert( const T &value )
 {
-    auto parent{};
-    auto *walker{ root_ };
+    Node *parent{};
+    Node *walker{ root_ };
 
     while ( walker ) {
         if ( value < walker->value ) {
@@ -120,9 +122,8 @@ void BST<T>::insert( const T &value )
         } else if ( walker->value < value ) {
             parent = walker;
             walker = walker->right;
-        } else {
+        } else
             return;
-        }
     }
 
     auto *new_node{ new Node{ value } };
@@ -145,9 +146,8 @@ bool BST<T>::search( const T &value ) const
             walker = walker->left;
         } else if ( walker->value < value ) {
             walker = walker->right;
-        } else {
+        } else
             return true;
-        }
     }
     return false;
 }
@@ -155,8 +155,8 @@ bool BST<T>::search( const T &value ) const
 template<typename T>
 void BST<T>::erase( const T &value )
 {
-    auto parent{};
-    auto *walker{ root_ };
+    Node *parent{};
+    Node *walker{ root_ };
 
     while ( walker ) {
         if ( value < walker->value ) {
@@ -165,9 +165,8 @@ void BST<T>::erase( const T &value )
         } else if ( walker->value < value ) {
             parent = walker;
             walker = walker->right;
-        } else {
+        } else
             break;
-        }
     }
 
     if ( !walker )
@@ -222,9 +221,9 @@ template<typename T>
 void BST<T>::inorder( Node *root, std::ostream &out ) const
 {
     if ( root ) {
-        inorder( root->left );
+        inorder( root->left, out );
         out << root->value << " ";
-        inorder( root->right );
+        inorder( root->right, out );
     }
 }
 
@@ -233,8 +232,8 @@ void BST<T>::preorder( Node *root, std::ostream &out ) const
 {
     if ( root ) {
         out << root->value << " ";
-        inorder( root->left );
-        inorder( root->right );
+        preorder( root->left, out );
+        preorder( root->right, out );
     }
 }
 
@@ -242,8 +241,8 @@ template<typename T>
 void BST<T>::postorder( Node *root, std::ostream &out ) const
 {
     if ( root ) {
-        inorder( root->left );
-        inorder( root->right );
+        postorder( root->left, out );
+        postorder( root->right, out );
         out << root->value << " ";
     }
 }

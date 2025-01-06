@@ -11,4 +11,4 @@ add_executable(DataStructuresSeminars main.cpp
 
 add_subdirectory(SortingAlgorithms)
 add_subdirectory(DataStructures)
-target_link_libraries(DataStructuresSeminars SortingAlgorithms)
+target_link_libraries(DataStructuresSeminars SortingAlgorithms DataStructures)

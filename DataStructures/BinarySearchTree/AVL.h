@@ -34,15 +34,15 @@ public:
 
 private:
     Node *copy_subtree( Node *other_root );
-    void destroy_substree( Node *root );
+    void destroy_subtree( Node *root );
 
     Node *rotate_left( Node *root );
     Node *rotate_right( Node *root );
 
     Node *get_successor( Node *root );
 
-    static int height( Node *node ) { return node ? node->height : 0; }
-    static int get_balance_factor( Node *node )
+    static int height( const Node * node ) { return node ? node->height : 0; }
+    static int get_balance_factor( const Node *node )
     {
         return height( node->left ) - height( node->right );
     }
@@ -108,7 +108,7 @@ typename AVL<T>::Node *AVL<T>::copy_subtree( Node *other_root )
 }
 
 template<class T>
-void AVL<T>::destroy_substree( Node *root )
+void AVL<T>::destroy_subtree( Node *root )
 {
     if ( !root )
         return;
@@ -145,7 +145,7 @@ typename AVL<T>::Node *AVL<T>::get_successor( Node *root )
 {
     assert( !root );
 
-    auto *succ = root->right;
+    auto *succ{ root->right };
     while ( succ->left )
         succ = succ->left;
 
@@ -168,13 +168,13 @@ typename AVL<T>::Node *AVL<T>::insert( const T &value, Node *root )
     int balance_factor = get_balance_factor( root );
 
     if ( balance_factor > 1 ) { // L_
-        if ( value < root->left->value ) // LL
+        if ( root->left->value < value ) // LR
             root->left = rotate_left( root->left );
-        root = rotate_right( root ); // LL || LR
+        root = rotate_right( root ); // LL
     } else if ( balance_factor < -1 ) { // R_
-        if ( root->right->value < value ) // RR
+        if ( value < root->right->value ) // RL
             root->right = rotate_right( root->right );
-        root = rotate_left( root );
+        root = rotate_left( root ); // RR
     }
 
     return root;
@@ -211,7 +211,7 @@ typename AVL<T>::Node *AVL<T>::erase( const T &value, Node *root )
         root->right = erase( value, root->right );
     else {
         if ( root->left && root->right ) {
-            auto *succ = get_successor( root->left );
+            auto *succ{ get_successor( root->left ) };
             root->value = succ->value;
             root->right = erase( succ->value, root->right );
         } else {
@@ -227,13 +227,13 @@ typename AVL<T>::Node *AVL<T>::erase( const T &value, Node *root )
     int balance_factor = get_balance_factor( root );
 
     if ( balance_factor > 1 ) { // L_
-        if ( value < root->left->value ) // LL
+        if ( get_balance_factor( root->left ) < 0 ) // LR
             root->left = rotate_left( root->left );
-        root = rotate_right( root ); // LL || LR
+        root = rotate_right( root ); // LL
     } else if ( balance_factor < -1 ) { // R_
-        if ( root->right->value < value ) // RR
+        if ( get_balance_factor( root->right ) > 0 ) // RL
             root->right = rotate_right( root->right );
-        root = rotate_left( root );
+        root = rotate_left( root ); // RR
     }
 
     return root;
@@ -259,9 +259,9 @@ template<typename T>
 void AVL<T>::inorder( Node *root, std::ostream &out ) const
 {
     if ( root ) {
-        inorder( root->left );
+        inorder( root->left, out );
         out << root->value << " ";
-        inorder( root->right );
+        inorder( root->right, out );
     }
 }
 
@@ -269,9 +269,9 @@ template<typename T>
 void AVL<T>::preorder( Node *root, std::ostream &out ) const
 {
     if ( root ) {
-        inorder( root->left );
+        inorder( root->left, out );
         out << root->value << " ";
-        inorder( root->right );
+        inorder( root->right, out );
     }
 }
 
@@ -279,9 +279,9 @@ template<typename T>
 void AVL<T>::postorder( Node *root, std::ostream &out ) const
 {
     if ( root ) {
-        inorder( root->left );
+        inorder( root->left, out );
         out << root->value << " ";
-        inorder( root->right );
+        inorder( root->right, out );
     }
 }
 #endif // AVL_H
