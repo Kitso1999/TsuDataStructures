@@ -1,2 +1,2 @@
-add_library(SortingAlgorithms SortingAlgorithms.h SortingAlgorithms.cpp)
+add_library(SortingAlgorithms INTERFACE)
 target_include_directories(SortingAlgorithms PUBLIC .)
