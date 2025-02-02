@@ -1,0 +1,2 @@
+add_library(SortingAlgorithms INTERFACE)
+target_include_directories(SortingAlgorithms INTERFACE .)

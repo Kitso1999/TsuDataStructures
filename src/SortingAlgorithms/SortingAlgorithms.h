@@ -11,7 +11,7 @@ namespace kts
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
-void BubbleSort( Iter first, Sent last, Pred pred = std::less<>{} )
+void BubbleSort( Iter first, Sent last, Pred pred )
 {
     for ( ; first != last; --last ) {
         bool swapped = false;
@@ -28,33 +28,51 @@ void BubbleSort( Iter first, Sent last, Pred pred = std::less<>{} )
     }
 }
 
+template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
+void BubbleSort( Iter first, Sent last )
+{
+    BubbleSort(first, last, std::less{} );
+}
+
 template<std::forward_iterator Iter, std::sentinel_for<Iter> Sent,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
-void SelectionSort( Iter first, Sent last, Pred pred = std::less<>{} )
+void SelectionSort( Iter first, Sent last, Pred pred )
 {
-    for ( ; first != last; first++ ) {
+    for ( ; first != last; ++first ) {
         auto min = std::min_element( first, last, pred );
         std::iter_swap( first, min );
     }
 }
 
+template<std::forward_iterator Iter, std::sentinel_for<Iter> Sent>
+void SelectionSort( Iter first, Sent last )
+{
+    SelectionSort(first, last, std::less{} );
+}
+
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
-void InsertionSort( Iter first, Sent last, Pred pred = std::less<>{} )
+void InsertionSort( Iter first, Sent last, Pred pred )
 {
     auto r_last = std::make_reverse_iterator( first );
 
     for ( auto next = first; next != last; ++next )
         for ( auto walker = std::make_reverse_iterator( next );
-              walker != first && pred( walker, std::next( walker ) ); walker++ )
+              walker != first && pred( walker, std::next( walker ) ); ++walker )
             std::iter_swap( walker, std::next( walker ) );
 }
 
+template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
+void InsertionSort( Iter first, Sent last )
+{
+    InsertionSort(first, last, std::less{} );
+}
+
 template<std::input_iterator Iter, std::sentinel_for<Iter> Sent,
-         std::output_iterator DestIter,
+         std::output_iterator<std::iter_value_t<Iter>> DestIter,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
 static void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r,
-                   DestIter dest, Pred pred = std::less<>{} )
+                   DestIter dest, Pred pred )
 {
     while ( first_l != last_l && first_r != last_r )
         *dest++ = pred( *first_r, *first_l ) ? *first_r++ : *first_l++;
@@ -66,9 +84,17 @@ static void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r,
         *dest++ = *first_r++;
 }
 
+template<std::input_iterator Iter, std::sentinel_for<Iter> Sent,
+         std::output_iterator<std::iter_value_t<Iter>> DestIter>
+static void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r,
+                   DestIter dest )
+{
+    Merge(first_l, last_l, first_r, last_r, dest, std::less{} );
+}
+
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
-void MergeSort( Iter first, Sent last, Pred pred = std::less<>{} )
+void MergeSort( Iter first, Sent last, Pred pred )
 {
     if ( last <= first )
         return;
@@ -91,6 +117,13 @@ void MergeSort( Iter first, Sent last, Pred pred = std::less<>{} )
     std::move( temp.begin(), temp.end() + size, first );
 }
 
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
+void MergeSort( Iter first, Sent last )
+{
+    MergeSort(first, last, std::less{} );
+}
+
+
 // ***TODO implement with templates vvv
 // static int Partition( int *arr, int size, int pivot )
 // {
@@ -101,7 +134,7 @@ void MergeSort( Iter first, Sent last, Pred pred = std::less<>{} )
 //
 //     // same as while(true)
 //     for ( ;; ) {
-//         // skip in-place elements at the begining
+//         // skip in-place elements at the beginning
 //         for ( ;; ) {
 //             if ( l == r )
 //                 return l;
