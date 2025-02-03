@@ -123,64 +123,62 @@ void MergeSort( Iter first, Sent last )
     MergeSort(first, last, std::less{} );
 }
 
+template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
+    std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+static Iter Partition( Iter first, Sent last, Pred pred )
+{
+    if ( first == last )
+        return last;
+
+    auto pivot = *first;
+
+    // same as while(true)
+    for ( ;; ) {
+        // skip in-place elements at the beginning
+        for ( ;; ) {
+            if ( first == last )
+                return first;
+
+            if ( !pred( *first, pivot ) )
+                break;
+
+            ++first;
+        }
+
+        // skip in-place elements at the end
+        do {
+            --last;
+
+            if ( first == last )
+                return last;
+        } while ( !pred( *last, pivot) );
+
+        std::iter_swap( first, last ); // swap out-of-place elements
+        ++first;                         // advance and loop
+    }
+}
+
+template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
+static Iter Partition( Iter first, Sent last )
+{
+    return Partition( first, last, std::less{} );
+}
+
+template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
+        std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+void QuickSort( Iter first, Sent last, Pred pred )
+{
+    if (first == last)
+        return;
+
+    auto partition_point = Partition( first, last, pred );
+    std::iter_swap( first, partition_point );
+
+    QuickSort( first, partition_point );
+    QuickSort( std::next(partition_point), last );
+}
 
 // ***TODO implement with templates vvv
-// static int Partition( int *arr, int size, int pivot )
-// {
-//     if ( size < 1 )
-//         return 0;
-//     int l{};
-//     int r{ size };
-//
-//     // same as while(true)
-//     for ( ;; ) {
-//         // skip in-place elements at the beginning
-//         for ( ;; ) {
-//             if ( l == r )
-//                 return l;
-//
-//             if ( arr[l] >= pivot )
-//                 break;
-//
-//             l++;
-//         }
-//
-//         // skip in-place elements at the end
-//         do {
-//             --r;
-//
-//             if ( l == r )
-//                 return l;
-//         } while ( arr[r] >= pivot );
-//
-//         std::swap( arr[l], arr[r] ); // swap out-of-place elements
-//         ++l;                         // advance and loop
-//     }
-// }
-//
-// void QuickSort( int *arr, int size )
-// {
-//     if ( size < 2 )
-//         return;
-//     static std::default_random_engine dre( time( nullptr ) );
-//     std::uniform_int_distribution<int> di( 0, size - 1 );
-//
-//     int pivot_index{ di( dre ) };
-//     std::swap( arr[pivot_index], arr[size - 1] );
-//
-//     pivot_index = size - 1;
-//     int pivot = arr[pivot_index];
-//
-//     int partition_point = Partition( arr, size, pivot );
-//     std::swap( arr[partition_point], arr[pivot_index] );
-//
-//     int left_size = partition_point;
-//     int right_size = size - partition_point - 1;
-//
-//     QuickSort( arr, left_size );
-//     QuickSort( arr + partition_point + 1, right_size );
-// }
-//
 // static void heapify( int *arr, int size, int i )
 // {
 //     int l = 2 * i + 1;
