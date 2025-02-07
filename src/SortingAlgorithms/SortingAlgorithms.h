@@ -31,7 +31,7 @@ void BubbleSort( Iter first, Sent last, Pred pred )
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
 void BubbleSort( Iter first, Sent last )
 {
-    BubbleSort(first, last, std::less{} );
+    BubbleSort( first, last, std::less{} );
 }
 
 template<std::forward_iterator Iter, std::sentinel_for<Iter> Sent,
@@ -47,7 +47,7 @@ void SelectionSort( Iter first, Sent last, Pred pred )
 template<std::forward_iterator Iter, std::sentinel_for<Iter> Sent>
 void SelectionSort( Iter first, Sent last )
 {
-    SelectionSort(first, last, std::less{} );
+    SelectionSort( first, last, std::less{} );
 }
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
@@ -65,14 +65,14 @@ void InsertionSort( Iter first, Sent last, Pred pred )
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
 void InsertionSort( Iter first, Sent last )
 {
-    InsertionSort(first, last, std::less{} );
+    InsertionSort( first, last, std::less{} );
 }
 
 template<std::input_iterator Iter, std::sentinel_for<Iter> Sent,
          std::output_iterator<std::iter_value_t<Iter>> DestIter,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
-static void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r,
-                   DestIter dest, Pred pred )
+void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r, DestIter dest,
+            Pred pred )
 {
     while ( first_l != last_l && first_r != last_r )
         *dest++ = pred( *first_r, *first_l ) ? *first_r++ : *first_l++;
@@ -86,10 +86,10 @@ static void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r,
 
 template<std::input_iterator Iter, std::sentinel_for<Iter> Sent,
          std::output_iterator<std::iter_value_t<Iter>> DestIter>
-static void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r,
-                   DestIter dest )
+void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r,
+            DestIter dest )
 {
-    Merge(first_l, last_l, first_r, last_r, dest, std::less{} );
+    Merge( first_l, last_l, first_r, last_r, dest, std::less{} );
 }
 
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
@@ -120,12 +120,12 @@ void MergeSort( Iter first, Sent last, Pred pred )
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
 void MergeSort( Iter first, Sent last )
 {
-    MergeSort(first, last, std::less{} );
+    MergeSort( first, last, std::less{} );
 }
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
-    std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
-static Iter Partition( Iter first, Sent last, Pred pred )
+         std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+Iter Partition( Iter first, Sent last, Pred pred )
 {
     if ( first == last )
         return last;
@@ -151,7 +151,7 @@ static Iter Partition( Iter first, Sent last, Pred pred )
 
             if ( first == last )
                 return last;
-        } while ( !pred( *last, pivot) );
+        } while ( !pred( *last, pivot ) );
 
         std::iter_swap( first, last ); // swap out-of-place elements
         ++first;                         // advance and loop
@@ -159,69 +159,127 @@ static Iter Partition( Iter first, Sent last, Pred pred )
 }
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
-static Iter Partition( Iter first, Sent last )
+Iter Partition( Iter first, Sent last )
 {
     return Partition( first, last, std::less{} );
 }
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
-        std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+         std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
 void QuickSort( Iter first, Sent last, Pred pred )
 {
-    if (first == last)
+    if ( first == last )
         return;
 
     auto partition_point = Partition( first, last, pred );
     std::iter_swap( first, partition_point );
 
     QuickSort( first, partition_point );
-    QuickSort( std::next(partition_point), last );
+    QuickSort( std::next( partition_point ), last );
 }
 
-// ***TODO implement with templates vvv
-// static void heapify( int *arr, int size, int i )
-// {
-//     int l = 2 * i + 1;
-//     int r = 2 * i + 2;
-//
-//     int largest = i;
-//     if ( l < size && arr[largest] < arr[l] )
-//         largest = l;
-//     if ( r < size && arr[largest] < arr[r] )
-//         largest = r;
-//
-//     if ( largest != i ) {
-//         std::swap( arr[i], arr[largest] );
-//         heapify( arr, size, largest );
-//     }
-// }
-//
-// static void push_heap( int *arr, int size )
-// {
-//     for ( int i = size; i > 0 && arr[i / 2] < arr[i]; i /= 2 )
-//         std::swap( arr[i / 2], arr[i] );
-// }
-//
-// static void pop_heap( int *arr, int size )
-// {
-//     std::swap( arr[0], arr[size - 1] );
-//     heapify( arr, size - 1, 0 );
-// }
-//
-// static void make_heap( int *arr, int size )
-// {
-//     for ( int i = ( size - 1 ) / 2; i >= 0; i-- )
-//         heapify( arr, size, i );
-// }
-//
-// void HeapSort( int *arr, int size )
-// {
-//     make_heap( arr, size );
-//     while ( size > 1 )
-//         pop_heap( arr, size-- );
-// }
-//***
-
+template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
+void QuickSort( Iter first, Sent last )
+{
+    QuickSort( first, last, std::less{} );
 }
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
+         std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+void Heapify( Iter first, Sent last, Iter start, Pred pred )
+{
+    const auto size = last - first;
+    auto i = start - first;
+
+    while ( i < size ) {
+        auto parent = first + i;
+        auto left_child = first + 2 * i + 1;
+        auto right_child = first + 2 * i + 2;
+
+        auto largest = parent;
+        if ( left_child < last && pred( *largest, *left_child ) )
+            largest = left_child;
+        if ( right_child < last && pred( *largest, *left_child ) )
+            largest = right_child;
+
+        if ( largest == parent )
+            return;
+        std::iter_swap( parent, largest );
+        i = std::distance( first, largest );
+    }
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
+void Heapify( Iter first, Sent last, Iter start )
+{
+    Heapify( first, last, start, std::less{} );
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
+         std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+void PushHeap( Iter first, Sent last, Pred pred )
+{
+    const auto size = std::distance( first, last );
+
+    if ( size > 1 )
+        for ( auto i = size; i > 0 && pred( first + i / 2, first + i ); i /= 2 )
+            std::swap( first + i / 2, first + i );
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
+void PushHeap( Iter first, Sent last )
+{
+    PushHeap( first, last, std::less{} );
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
+         std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+void PopHeap( Iter first, Sent last, Pred pred )
+{
+    std::iter_swap( first, --last );
+    heapify( first, last, first, pred );
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
+void PopHeap( Iter first, Sent last )
+{
+    PopHeap( first, last, std::less{} );
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
+         std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+void MakeHeap( Iter first, Sent last, Pred pred )
+{
+    const auto rfirst =
+        std::make_reverse_iterator( first + ( last - first ) / 2 );
+    const auto rlast = std::make_reverse_iterator( first );
+
+    for ( auto rnext = rfirst; rnext != rlast; ++rnext )
+        heapify( first, last, rnext.base(), pred );
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
+void MakeHeap( Iter first, Sent last )
+{
+    MakeHeap( first, last, std::less{} );
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
+         std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
+void HeapSort( Iter first, Sent last, Pred pred )
+{
+    MakeHeap( first, last, pred );
+
+    for ( auto size = last - first; size > 1; --size, --last) {}
+        pop_heap( first, last, pred );
+}
+
+template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
+void HeapSort( Iter first, Sent last )
+{
+    HeapSort( first, last, std::less{} );
+}
+
+} // namespace kts
 
 #endif // KTS_SORTINGALGORITHMS_H_
