@@ -1,18 +1,16 @@
 include(FetchContent)
 
 FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG 914aeecfe23b1e16af6ea675a4fb5dbd5a5b8d0a # v3.8.0
-        FIND_PACKAGE_ARGS NAMES Catch2
+        GoogleTest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG a866428a78ab02b7072f96c8de15802ffd451a7f
 )
 
-FetchContent_MakeAvailable(Catch2)
+FetchContent_MakeAvailable(GoogleTest)
 
-add_executable(test-sorting bubble_sort_test.cpp)
-target_link_libraries(test-sorting PRIVATE SortingAlgorithms Catch2::Catch2WithMain)
-include(CTest)
+add_executable(test-sorting test_sorts.cpp
+        test_sorts.h)
+target_link_libraries(test-sorting PRIVATE SortingAlgorithms gtest_main)
 
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-include(Catch)
-catch_discover_tests(test-sorting)
+include(GoogleTest)
+gtest_discover_tests(test-sorting)

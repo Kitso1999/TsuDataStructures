@@ -58,7 +58,9 @@ void InsertionSort( Iter first, Sent last, Pred pred )
 
     for ( auto next = first; next != last; ++next )
         for ( auto walker = std::make_reverse_iterator( next );
-              walker != first && pred( walker, std::next( walker ) ); ++walker )
+              walker != r_last && std::next( walker ) != r_last &&
+              pred( *walker, *std::next( walker ) );
+              ++walker )
             std::iter_swap( walker, std::next( walker ) );
 }
 
@@ -68,11 +70,13 @@ void InsertionSort( Iter first, Sent last )
     InsertionSort( first, last, std::less{} );
 }
 
-template<std::input_iterator Iter, std::sentinel_for<Iter> Sent,
-         std::output_iterator<std::iter_value_t<Iter>> DestIter,
-         std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
-void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r, DestIter dest,
-            Pred pred )
+template<
+    std::input_iterator Iter1, std::input_iterator Iter2,
+    std::sentinel_for<Iter1> Sent1, std::sentinel_for<Iter2> Sent2,
+    std::predicate<std::iter_value_t<Iter1>, std::iter_value_t<Iter2>> Pred,
+    std::output_iterator<std::iter_value_t<Iter1>> DestIter>
+void Merge( Iter1 first_l, Sent1 last_l, Iter2 first_r, Sent2 last_r,
+            DestIter dest, Pred pred )
 {
     while ( first_l != last_l && first_r != last_r )
         *dest++ = pred( *first_r, *first_l ) ? *first_r++ : *first_l++;
@@ -83,10 +87,11 @@ void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r, DestIter dest,
     while ( first_r != last_r )
         *dest++ = *first_r++;
 }
-
-template<std::input_iterator Iter, std::sentinel_for<Iter> Sent,
-         std::output_iterator<std::iter_value_t<Iter>> DestIter>
-void Merge( Iter first_l, Sent last_l, Iter first_r, Sent last_r,
+template<std::input_iterator Iter1, std::input_iterator Iter2,
+         std::sentinel_for<Iter1> Sent1, std::sentinel_for<Iter2> Sent2,
+         std::output_iterator<std::iter_value_t<Iter1>> DestIter>
+    requires std::mergeable<Iter1, Iter2, DestIter, std::less<>>
+void Merge( Iter1 first_l, Sent1 last_l, Iter2 first_r, Sent2 last_r,
             DestIter dest )
 {
     Merge( first_l, last_l, first_r, last_r, dest, std::less{} );
@@ -101,18 +106,19 @@ void MergeSort( Iter first, Sent last, Pred pred )
 
     auto size = std::distance( first, last );
 
-    auto first_l = std::make_move_iterator( first );
-    auto last_l = std::make_move_iterator( first + size / 2 );
-    auto first_r = std::make_move_iterator( last_l );
-    auto last_r = std::make_move_iterator( last );
+    auto first_l = first;
+    auto last_l = first + size / 2;
+    auto first_r = last_l;
+    auto last_r = last;
 
-    MergeSort( first_l, last_l );
-    MergeSort( first_r, last_r );
+    MergeSort( first_l, last_l, pred );
+    MergeSort( first_r, last_r, pred );
 
     std::vector<std::iter_value_t<Iter>> temp;
     temp.reserve( size );
 
-    Merge( first_l, last_l, first_r, last_l, std::back_inserter( temp ), pred );
+    Merge(first_l, last_l,first_r, last_r,
+        std::back_inserter( temp ), pred );
 
     std::move( temp.begin(), temp.end() + size, first );
 }
@@ -174,8 +180,8 @@ void QuickSort( Iter first, Sent last, Pred pred )
     auto partition_point = Partition( first, last, pred );
     std::iter_swap( first, partition_point );
 
-    QuickSort( first, partition_point );
-    QuickSort( std::next( partition_point ), last );
+    QuickSort( first, partition_point, pred );
+    QuickSort( std::next( partition_point ), last, pred );
 }
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
@@ -255,7 +261,7 @@ void MakeHeap( Iter first, Sent last, Pred pred )
     const auto rlast = std::make_reverse_iterator( first );
 
     for ( auto rnext = rfirst; rnext != rlast; ++rnext )
-        heapify( first, last, rnext.base(), pred );
+        Heapify( first, last, rnext.base(), pred );
 }
 
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
@@ -270,8 +276,9 @@ void HeapSort( Iter first, Sent last, Pred pred )
 {
     MakeHeap( first, last, pred );
 
-    for ( auto size = last - first; size > 1; --size, --last) {}
-        pop_heap( first, last, pred );
+    for ( auto size = last - first; size > 1; --size, --last ) {
+    }
+    pop_heap( first, last, pred );
 }
 
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
