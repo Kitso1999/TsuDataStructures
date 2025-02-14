@@ -9,7 +9,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(GoogleTest)
 
 add_executable(test-sorting test_sorts.cpp
-        test_sorts.h)
+)
 target_link_libraries(test-sorting PRIVATE SortingAlgorithms gtest_main)
 
 include(GoogleTest)
