@@ -126,6 +126,9 @@ typename AVL<T>::Node *AVL<T>::rotate_left( Node *root )
     root->right = new_root->left;
     new_root->left = root;
 
+    root->height--;
+    new_root->height++;
+    
     return new_root;
 }
 
@@ -137,6 +140,9 @@ typename AVL<T>::Node *AVL<T>::rotate_right( Node *root )
     root->left = new_root->right;
     new_root->right = root;
 
+    root->height--;
+    new_root->height++;
+    
     return new_root;
 }
 
