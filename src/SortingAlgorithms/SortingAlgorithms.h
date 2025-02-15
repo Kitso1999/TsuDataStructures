@@ -278,7 +278,7 @@ void HeapSort( Iter first, Sent last, Pred pred )
 
     for ( auto size = last - first; size > 1; --size, --last ) {
     }
-    pop_heap( first, last, pred );
+    PopHeap( first, last, pred );
 }
 
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
