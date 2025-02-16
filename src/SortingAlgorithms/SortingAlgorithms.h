@@ -54,14 +54,14 @@ template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
 void InsertionSort( Iter first, Sent last, Pred pred )
 {
-    auto r_last = std::make_reverse_iterator( first );
-
     for ( auto next = first; next != last; ++next )
-        for ( auto walker = std::make_reverse_iterator( next );
-              walker != r_last && std::next( walker ) != r_last &&
-              pred( *walker, *std::next( walker ) );
-              ++walker )
-            std::iter_swap( walker, std::next( walker ) );
+        for ( auto walker = next; walker != first; ) {
+            const auto r = walker;
+            const auto l = --walker;
+            if ( !pred( *r, *l ) )
+                break;
+            std::iter_swap( l, r );
+        }
 }
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
@@ -105,6 +105,8 @@ void MergeSort( Iter first, Sent last, Pred pred )
         return;
 
     auto size = std::distance( first, last );
+    if ( size < 2 )
+        return;
 
     auto first_l = first;
     auto last_l = first + size / 2;
@@ -117,10 +119,9 @@ void MergeSort( Iter first, Sent last, Pred pred )
     std::vector<std::iter_value_t<Iter>> temp;
     temp.reserve( size );
 
-    Merge(first_l, last_l,first_r, last_r,
-        std::back_inserter( temp ), pred );
+    Merge( first_l, last_l, first_r, last_r, std::back_inserter( temp ), pred );
 
-    std::move( temp.begin(), temp.end() + size, first );
+    std::move( temp.begin(), temp.end(), first );
 }
 
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
@@ -131,43 +132,38 @@ void MergeSort( Iter first, Sent last )
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
-Iter Partition( Iter first, Sent last, Pred pred )
+Iter PartitionWithPivot( Iter first, Sent last, Pred pred )
 {
-    if ( first == last )
-        return last;
+    // no need to range-check check because
+    // QuickSort will call it on a non-empty range
 
-    auto pivot = *first;
+    // used for bounds checking, this is not moved around
+    const auto begin = first;
+    auto pivot( std::move( *first ) );
 
-    // same as while(true)
-    for ( ;; ) {
+    for ( ++first; first != last; ++first ) {
         // skip in-place elements at the beginning
-        for ( ;; ) {
-            if ( first == last )
-                return first;
+        for ( ; first != last && pred( *first, pivot ); ++first ) {}
 
-            if ( !pred( *first, pivot ) )
-                break;
-
-            ++first;
-        }
+        if ( first == last )
+            break;
 
         // skip in-place elements at the end
         do {
             --last;
+        } while ( first != last && !pred( *last, pivot ) );
 
-            if ( first == last )
-                return last;
-        } while ( !pred( *last, pivot ) );
-
+        if ( first == last )
+            break;
         std::iter_swap( first, last ); // swap out-of-place elements
-        ++first;                         // advance and loop
     }
-}
 
-template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
-Iter Partition( Iter first, Sent last )
-{
-    return Partition( first, last, std::less{} );
+    auto pivot_pos = std::prev( first );
+    if ( begin != pivot_pos ) {
+        *begin = std::move( *pivot_pos );
+    }
+    *pivot_pos = std::move( pivot );
+    return first;
 }
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent,
@@ -177,11 +173,10 @@ void QuickSort( Iter first, Sent last, Pred pred )
     if ( first == last )
         return;
 
-    auto partition_point = Partition( first, last, pred );
-    std::iter_swap( first, partition_point );
+    auto partition_point = PartitionWithPivot( first, last, pred );
 
-    QuickSort( first, partition_point, pred );
-    QuickSort( std::next( partition_point ), last, pred );
+    QuickSort( first, std::prev( partition_point ), pred );
+    QuickSort( partition_point, last, pred );
 }
 
 template<std::bidirectional_iterator Iter, std::sentinel_for<Iter> Sent>
@@ -205,7 +200,7 @@ void Heapify( Iter first, Sent last, Iter start, Pred pred )
         auto largest = parent;
         if ( left_child < last && pred( *largest, *left_child ) )
             largest = left_child;
-        if ( right_child < last && pred( *largest, *left_child ) )
+        if ( right_child < last && pred( *largest, *right_child ) )
             largest = right_child;
 
         if ( largest == parent )
@@ -243,7 +238,7 @@ template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
 void PopHeap( Iter first, Sent last, Pred pred )
 {
     std::iter_swap( first, --last );
-    heapify( first, last, first, pred );
+    Heapify( first, last, first, pred );
 }
 
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
@@ -256,12 +251,11 @@ template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent,
          std::predicate<std::iter_value_t<Iter>, std::iter_value_t<Iter>> Pred>
 void MakeHeap( Iter first, Sent last, Pred pred )
 {
-    const auto rfirst =
-        std::make_reverse_iterator( first + ( last - first ) / 2 );
-    const auto rlast = std::make_reverse_iterator( first );
+    if ( first == last )
+        return;
 
-    for ( auto rnext = rfirst; rnext != rlast; ++rnext )
-        Heapify( first, last, rnext.base(), pred );
+    for ( auto walker = first + ( last - first ) / 2; walker-- != first; )
+        Heapify( first, last, walker, pred );
 }
 
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
@@ -276,9 +270,8 @@ void HeapSort( Iter first, Sent last, Pred pred )
 {
     MakeHeap( first, last, pred );
 
-    for ( auto size = last - first; size > 1; --size, --last ) {
-    }
-    PopHeap( first, last, pred );
+    for ( auto size = last - first; size > 1; --size, --last )
+        PopHeap( first, last, pred );
 }
 
 template<std::random_access_iterator Iter, std::sentinel_for<Iter> Sent>
